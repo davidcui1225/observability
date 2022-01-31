@@ -16,6 +16,7 @@ import SavedObjects from './services/saved_objects/event_analytics/saved_objects
 import { AppPluginStartDependencies, ObservabilitySetup, ObservabilityStart } from './types';
 import { convertLegacyNotebooksUrl } from './components/notebooks/components/helpers/legacy_route_helpers';
 import { uiSettingsService } from '../common/utils';
+import './components/collaborations/comments';
 
 export class ObservabilityPlugin implements Plugin<ObservabilitySetup, ObservabilityStart> {
   public setup(core: CoreSetup): ObservabilitySetup {

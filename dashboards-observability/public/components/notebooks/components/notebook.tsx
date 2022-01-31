@@ -47,6 +47,7 @@ import {
 } from './helpers/reporting_context_menu_helper';
 import { zeppelinParagraphParser } from './helpers/zeppelin_parser';
 import { Paragraphs } from './paragraph_components/paragraphs';
+import { doSomethingWithSelectedText } from '../../collaborations/comments';
 const panelStyles: CSS.Properties = {
   float: 'left',
   width: '100%',
@@ -678,7 +679,7 @@ export class Notebook extends Component<NotebookProps, NotebookState> {
     });
   }
 
-  componentDidMount() {
+  componentDidMount() { 
     this.setBreadcrumbs('');
     this.loadNotebook();
     this.checkIfReportingPluginIsInstalled();
@@ -692,6 +693,15 @@ export class Notebook extends Component<NotebookProps, NotebookState> {
     } else if (view === 'input_only') {
       this.setState({ selectedViewId: 'input_only' });
     }
+  }
+
+  addTextCollaboration() {
+    // check if there is highlighted text
+    console.log('addText called');
+    // if (doSomethingWithSelectedText()) {
+    //   console.log('there is highlighting');
+    //   // add popover
+    // }
   }
 
   render() {
@@ -940,7 +950,14 @@ export class Notebook extends Component<NotebookProps, NotebookState> {
                 </EuiFlexItem>
               )}
               <EuiFlexItem grow={false} />
-              <EuiFlexItem grow={false} />
+              <EuiFlexItem grow={false}>
+                <EuiButton
+                  data-test-subj="notebook-collaborate-button"
+                  onClick={this.addTextCollaboration}
+                >
+                  Collaborate
+                </EuiButton>
+              </EuiFlexItem>
               <EuiFlexItem grow={false}>
                 <EuiPopover
                   panelPaddingSize="none"

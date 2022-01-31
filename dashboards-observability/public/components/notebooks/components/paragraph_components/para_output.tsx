@@ -18,6 +18,7 @@ import {
 import { ParaType } from '../../../../../common/types/notebooks';
 import { uiSettingsService } from '../../../../../common/utils';
 import { QueryDataGridMemo } from './para_query_grid';
+import { CollaborationsText } from '../../../collaborations/textCollaborations';
 
 /*
  * "ParaOutput" component is used by notebook to populate paragraph outputs for an open notebook.
@@ -107,9 +108,12 @@ export const ParaOutput = (props: {
           }
         case 'MARKDOWN':
           return (
-            <EuiText key={key} className="markdown-output-text">
+            // <EuiText key={key} className="markdown-output-text">
+            //   <MarkdownRender source={val} />
+            // </EuiText>
+            <CollaborationsText>
               <MarkdownRender source={val} />
-            </EuiText>
+            </CollaborationsText>
           );
         case 'VISUALIZATION':
           let from = moment(visInput?.timeRange?.from).format(dateFormat);
