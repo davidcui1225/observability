@@ -108,12 +108,12 @@ export const ParaOutput = (props: {
           }
         case 'MARKDOWN':
           return (
-            // <EuiText key={key} className="markdown-output-text">
-            //   <MarkdownRender source={val} />
-            // </EuiText>
-            <CollaborationsText>
+            <EuiText key={key} className="markdown-output-text">
               <MarkdownRender source={val} />
-            </CollaborationsText>
+            </EuiText>
+            // <CollaborationsText>
+            //   <MarkdownRender source={val} />
+            // </CollaborationsText>
           );
         case 'VISUALIZATION':
           let from = moment(visInput?.timeRange?.from).format(dateFormat);

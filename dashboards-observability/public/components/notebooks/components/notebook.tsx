@@ -8,10 +8,17 @@ import {
   EuiButtonGroup,
   EuiButtonGroupOption,
   EuiCard,
+  EuiCodeBlock,
+  EuiCommentList,
+  EuiCommentProps,
   EuiContextMenu,
   EuiContextMenuPanelDescriptor,
+  EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiFlyout,
+  EuiFlyoutBody,
+  EuiFlyoutHeader,
   EuiIcon,
   EuiOverlayMask,
   EuiPage,
@@ -48,6 +55,7 @@ import {
 import { zeppelinParagraphParser } from './helpers/zeppelin_parser';
 import { Paragraphs } from './paragraph_components/paragraphs';
 import { doSomethingWithSelectedText } from '../../collaborations/comments';
+import { CollaborationsParagraph } from '../../collaborations/chatWindow';
 const panelStyles: CSS.Properties = {
   float: 'left',
   width: '100%',
@@ -60,6 +68,40 @@ const pageStyles: CSS.Properties = {
   width: '100%',
   maxWidth: '1500px',
 };
+
+// key value pairs with object id mapping to the comment data 
+const comments = new Map([
+  [ "paragraph_f8353270-778c-4f90-8907-f62a354a4a46", 
+    [{
+      username: 'janed',
+      timestamp: 'Jan 1, 2020',
+      children: "test comment #1",
+    },
+    {
+      username: 'elohar',
+      timestamp: 'Jan 14, 2020',
+      children: "test comment #2",
+    },
+    {
+      username: 'davidcui',
+      timestamp: 'Feb 27, 2022',
+      children: "test comment #3"
+    }]
+  ],
+  [
+    "paragraph_9766ca17-3c63-4ad5-ba57-43d48340aa25",
+      [{
+        username: 'janed',
+        timestamp: 'Jan 1, 2020',
+        children: "test comment #1",
+      },
+      {
+        username: 'elohar',
+        timestamp: 'Jan 14, 2020',
+        children: "test comment #2",
+      }]
+  ]
+]);
 
 /*
  * "Notebook" component is used to display an open notebook
@@ -99,6 +141,9 @@ type NotebookState = {
   isReportingActionsPopoverOpen: boolean;
   isReportingLoadingModalOpen: boolean;
   isModalVisible: boolean;
+  isCollaborationsFlyoutVisible: boolean;
+  collaborationsFlyout: any; // any type is temporary
+  collaborationsComment: string;
   modalLayout: React.ReactNode;
   showQueryParagraphError: boolean;
   queryParagraphErrorMessage: string;
@@ -121,19 +166,32 @@ export class Notebook extends Component<NotebookProps, NotebookState> {
       isReportingActionsPopoverOpen: false,
       isReportingLoadingModalOpen: false,
       isModalVisible: false,
+      isCollaborationsFlyoutVisible: false,
+      collaborationsFlyout: '',
+      collaborationsComment: '',
       modalLayout: <EuiOverlayMask></EuiOverlayMask>,
       showQueryParagraphError: false,
       queryParagraphErrorMessage: '',
     };
   }
 
+  toggleCollaborationsFlyout = (show: boolean) => {
+    console.log('toggle Collaborations flyout');
+    this.setState({ isCollaborationsFlyoutVisible: show });
+  }
+
   toggleReportingLoadingModal = (show: boolean) => {
     this.setState({ isReportingLoadingModalOpen: show });
   };
 
+  onChangeCollaborationsComment = (comment: string) => {
+    this.setState({ collaborationsComment: comment });
+  }
+
   parseAllParagraphs = () => {
     let parsedPara = this.parseParagraphs(this.state.paragraphs);
     this.setState({ parsedPara });
+    console.log('parsedPara is', parsedPara);
   };
 
   // parse paragraphs based on backend
@@ -695,13 +753,17 @@ export class Notebook extends Component<NotebookProps, NotebookState> {
     }
   }
 
-  addTextCollaboration() {
-    // check if there is highlighted text
-    console.log('addText called');
-    // if (doSomethingWithSelectedText()) {
-    //   console.log('there is highlighting');
-    //   // add popover
-    // }
+  getCollaborationsFlyoutComments() {
+    console.log('get collaborations flyout comments');
+    let flyoutComments: { username: string; timestamp: string; children: string; }[] = [];
+    [...comments.values()].map(commentList => commentList.map(comment => (
+      flyoutComments.push(comment)
+    )))
+    return flyoutComments;
+  }
+
+  openCollaborationsFlyout() {
+    this.toggleCollaborationsFlyout(true);
   }
 
   render() {
@@ -931,6 +993,38 @@ export class Notebook extends Component<NotebookProps, NotebookState> {
       <GenerateReportLoadingModal setShowLoading={this.toggleReportingLoadingModal} />
     ) : null;
 
+    const collaborationsFlyout = this.state.isCollaborationsFlyoutVisible ? (
+      <EuiFlyout
+      onClose={() => this.toggleCollaborationsFlyout(false)}
+      aria-labelledby={'simpleFlyoutTitle1234'}
+    >
+      <EuiFlyoutHeader hasBorder>
+        <EuiTitle size="m">
+          <h2 id={'simpleFlyoutTitle1234'}>Conversation</h2>
+        </EuiTitle>
+      </EuiFlyoutHeader>
+      <EuiFlyoutBody>
+        <EuiCommentList comments={this.getCollaborationsFlyoutComments()} />
+        <EuiFlexGroup alignItems='flexStart'>
+          <EuiFlexItem>
+            <EuiFieldText
+              placeholder='Type a message...'
+            />
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiButton
+              fill
+              onClick={console.log('click')}
+              >
+                Submit
+            </EuiButton>
+          </EuiFlexItem>
+          <EuiFlexItem />
+        </EuiFlexGroup>
+      </EuiFlyoutBody>
+    </EuiFlyout>
+    ) : null;
+
     return (
       <div style={pageStyles}>
         <EuiPage>
@@ -953,10 +1047,11 @@ export class Notebook extends Component<NotebookProps, NotebookState> {
               <EuiFlexItem grow={false}>
                 <EuiButton
                   data-test-subj="notebook-collaborate-button"
-                  onClick={this.addTextCollaboration}
+                  onClick={() => this.toggleCollaborationsFlyout(true)}
                 >
                   Collaborate
                 </EuiButton>
+                {collaborationsFlyout}
               </EuiFlexItem>
               <EuiFlexItem grow={false}>
                 <EuiPopover
@@ -1013,38 +1108,39 @@ export class Notebook extends Component<NotebookProps, NotebookState> {
             {this.state.parsedPara.length > 0 ? (
               <>
                 {this.state.parsedPara.map((para: ParaType, index: number) => (
-                  <div
-                    ref={this.state.parsedPara[index].paraDivRef}
-                    key={`para_div_${para.uniqueId}`}
-                    style={panelStyles}
-                  >
-                    <Paragraphs
-                      ref={this.state.parsedPara[index].paraRef}
-                      pplService={this.props.pplService}
-                      para={para}
-                      setPara={(para: ParaType) => this.setPara(para, index)}
-                      dateModified={this.state.paragraphs[index]?.dateModified}
-                      index={index}
-                      paraCount={this.state.parsedPara.length}
-                      paragraphSelector={this.paragraphSelector}
-                      textValueEditor={this.textValueEditor}
-                      handleKeyPress={this.handleKeyPress}
-                      addPara={this.addPara}
-                      DashboardContainerByValueRenderer={
-                        this.props.DashboardContainerByValueRenderer
-                      }
-                      deleteVizualization={this.deleteVizualization}
-                      http={this.props.http}
-                      selectedViewId={this.state.selectedViewId}
-                      setSelectedViewId={this.updateView}
-                      deletePara={this.showDeleteParaModal}
-                      runPara={this.updateRunParagraph}
-                      clonePara={this.cloneParaButton}
-                      movePara={this.movePara}
-                      showQueryParagraphError={this.state.showQueryParagraphError}
-                      queryParagraphErrorMessage={this.state.queryParagraphErrorMessage}
-                    />
-                  </div>
+                    <div
+                      ref={this.state.parsedPara[index].paraDivRef}
+                      key={`para_div_${para.uniqueId}`}
+                      style={panelStyles}
+                    >
+                      <CollaborationsParagraph
+                        comments={comments.get(para.uniqueId)}
+                        paraRef={this.state.parsedPara[index].paraRef}
+                        pplService={this.props.pplService}
+                        para={para}
+                        setPara={(para: ParaType) => this.setPara(para, index)}
+                        dateModified={this.state.paragraphs[index]?.dateModified}
+                        index={index}
+                        paraCount={this.state.parsedPara.length}
+                        paragraphSelector={this.paragraphSelector}
+                        textValueEditor={this.textValueEditor}
+                        handleKeyPress={this.handleKeyPress}
+                        addPara={this.addPara}
+                        DashboardContainerByValueRenderer={
+                          this.props.DashboardContainerByValueRenderer
+                        }
+                        deleteVizualization={this.deleteVizualization}
+                        http={this.props.http}
+                        selectedViewId={this.state.selectedViewId}
+                        setSelectedViewId={this.updateView}
+                        deletePara={this.showDeleteParaModal}
+                        runPara={this.updateRunParagraph}
+                        clonePara={this.cloneParaButton}
+                        movePara={this.movePara}
+                        showQueryParagraphError={this.state.showQueryParagraphError}
+                        queryParagraphErrorMessage={this.state.queryParagraphErrorMessage}
+                      />
+                    </div>
                 ))}
                 {this.state.selectedViewId !== 'output_only' && (
                   <>

@@ -12,7 +12,6 @@ import {
 } from "@elastic/eui";
 import TextSelector from 'text-selection-react';
 // import Popover from 'react-text-selection-popover';
-import {ChatWindow} from './chatWindow';
 
 type CollaborationsTextProps = {
   key: string;
@@ -23,7 +22,7 @@ type CollaborationsTextProps = {
 export function CollaborationsText(props) {
   const [addChatWindow, setAddChatWindow] = useState(false);
 
-  const handleAddChatWindow = (e) => {
+  const handleAddChatWindow = (e: boolean | ((prevState: boolean) => boolean)) => {
     console.log('handling chat window');
     setAddChatWindow(e);
   }
@@ -31,25 +30,24 @@ export function CollaborationsText(props) {
   const events = [
     {
       text: 'Collaborate',
-      handler: (text) => {handleAddChatWindow(true)}
+      handler: (text: any) => {handleAddChatWindow(true)}
     }
   ]
 
   const showChatWindow = addChatWindow === true ? (
-    <div>
-      <ChatWindow />
-    </div>
+    <>
+    </>
   ) : null;
 
   return (
     <>
-    {showChatWindow}
-      <TextSelector
+      {/* <TextSelector
         events={events}
         color={'yellow'}
         colorText={true}
-      />
+      /> */}
       <EuiText>
+        {/* {showChatWindow} */}
         {props.children}
       </EuiText>
     </>
