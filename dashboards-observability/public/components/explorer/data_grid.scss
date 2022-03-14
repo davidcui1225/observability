@@ -42,7 +42,7 @@
 .osd-table,
 .osdDocTable {
   /**
-  *  Style ES document _source in table view <dt>key:<dt><dd>value</dd>
+  *  Style OpenSearch document _source in table view <dt>key:<dt><dd>value</dd>
   *  Use alpha so this will stand out against non-white backgrounds, e.g. the highlighted
   *  row in the Context Log.
   */
@@ -329,7 +329,7 @@ discover-app {
 
 .dscCollapsibleSidebar {
   position: relative;
-  z-index: $euiZLevel1;
+  z-index: 1;
 
   .dscCollapsibleSidebar__collapseButton {
     position: absolute;

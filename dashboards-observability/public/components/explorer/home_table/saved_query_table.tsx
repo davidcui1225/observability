@@ -4,11 +4,7 @@
  */
 
 import React, { useState, useRef } from 'react';
-import {
-  EuiLink,
-  EuiInMemoryTable,
-  EuiIcon
-} from '@elastic/eui';
+import { EuiLink, EuiInMemoryTable, EuiIcon } from '@elastic/eui';
 import { FILTER_OPTIONS } from '../../../../common/constants/explorer';
 
 interface savedQueryTableProps {
@@ -16,19 +12,20 @@ interface savedQueryTableProps {
   handleHistoryClick: (objectId: string) => void;
   handleSelectHistory: (selectedHistories: Array<any>) => void;
   isTableLoading: boolean;
+  selectedHistories: Array<History>;
 }
 
 export function SavedQueryTable({
   savedHistories,
   handleHistoryClick,
   handleSelectHistory,
-  isTableLoading
+  isTableLoading,
 }: savedQueryTableProps) {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const pageIndexRef = useRef();
+  const pageIndexRef = useRef<number>();
   pageIndexRef.current = pageIndex;
-  const pageSizeRef = useRef();
+  const pageSizeRef = useRef<number>();
   pageSizeRef.current = pageSize;
 
   const onTableChange = ({ page = {} }) => {
@@ -44,7 +41,7 @@ export function SavedQueryTable({
       name: '',
       sortable: true,
       width: '40px',
-      render: (item) => {
+      render: (item: any) => {
         if (item == 'Visualization') {
           return (
             <div>
@@ -66,7 +63,7 @@ export function SavedQueryTable({
       width: '70%',
       sortable: true,
       truncateText: true,
-      render: (item) => {
+      render: (item: any) => {
         return (
           <EuiLink
             onClick={() => {
@@ -81,8 +78,8 @@ export function SavedQueryTable({
     },
     {
       field: 'type',
-      name: 'Type'
-    }
+      name: 'Type',
+    },
   ];
 
   const histories = savedHistories.map((h) => {
@@ -97,13 +94,13 @@ export function SavedQueryTable({
       date_start: savedObject.selected_date_range.start,
       date_end: savedObject.selected_date_range.end,
       timestamp: savedObject.selected_timestamp?.name,
-      fields: savedObject.selected_fields?.tokens || []
+      fields: savedObject.selected_fields?.tokens || [],
     };
     return {
       id: h.objectId,
       data: record,
       name: savedObject.name,
-      type: isSavedVisualization ? 'Visualization' : 'Query'
+      type: isSavedVisualization ? 'Visualization' : 'Query',
     };
   });
 
@@ -122,7 +119,7 @@ export function SavedQueryTable({
           name: i,
           view: i,
         })),
-      }
+      },
     ],
   };
 
@@ -132,7 +129,7 @@ export function SavedQueryTable({
     totalItemCount: histories.length,
     pageSizeOptions: [5, 10, 20, 50],
   };
-  
+
   return (
     <EuiInMemoryTable
       itemId="id"

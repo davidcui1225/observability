@@ -16,6 +16,8 @@ import {
   SAMPLE_VISUALIZATIONS_NAMES,
 } from '../utils/panel_constants';
 
+import { supressResizeObserverIssue } from '../utils/constants';
+
 const moveToEventsHome = () => {
   cy.visit(`${Cypress.env('opensearchDashboards')}/app/observability-dashboards#/event_analytics/`);
   cy.wait(delay * 3);
@@ -55,12 +57,13 @@ describe('Creating visualizations', () => {
     cy.get('[id^=autocomplete-textarea]').type(PPL_VISUALIZATIONS[0]);
     cy.get('.euiButton__text').contains('Refresh').click();
     cy.wait(delay);
-    cy.get('.tab-title').contains('Visualizations').click();
-    cy.wait(delay);
-    cy.get('.euiButton__text').contains('Save').click();
-    cy.wait(delay);
-    cy.get('.euiFieldText').type(PPL_VISUALIZATIONS_NAMES[0]);
-    cy.get('.euiPopoverFooter>.euiFlexGroup>:nth-child(2)').contains('Save').click();
+    supressResizeObserverIssue();
+    cy.get('button[id="main-content-vis"]').contains('Visualizations').click();
+    cy.wait(delay * 2);
+    cy.get('[data-test-subj="eventExplorer__saveManagementPopover"]').click();
+    cy.wait(delay * 2);
+    cy.get('[data-test-subj="eventExplorer__querySaveName"]').type(PPL_VISUALIZATIONS_NAMES[0]);
+    cy.get('[data-test-subj="eventExplorer__querySaveConfirm"]').click();
     cy.wait(delay);
     cy.get('.euiToastHeader__title').contains('successfully').should('exist');
   });
@@ -69,12 +72,13 @@ describe('Creating visualizations', () => {
     cy.get('[id^=autocomplete-textarea]').type(PPL_VISUALIZATIONS[1]);
     cy.get('.euiButton__text').contains('Refresh').click();
     cy.wait(delay);
-    cy.get('.tab-title').contains('Visualizations').click();
+    supressResizeObserverIssue();
+    cy.get('button[id="main-content-vis"]').contains('Visualizations').click();
     cy.wait(delay);
-    cy.get('.euiButton__text').contains('Save').click();
+    cy.get('[data-test-subj="eventExplorer__saveManagementPopover"]').click();
     cy.wait(delay);
-    cy.get('.euiFieldText').type(PPL_VISUALIZATIONS_NAMES[1]);
-    cy.get('.euiPopoverFooter>.euiFlexGroup>:nth-child(2)').contains('Save').click();
+    cy.get('[data-test-subj="eventExplorer__querySaveName"]').type(PPL_VISUALIZATIONS_NAMES[1]);
+    cy.get('[data-test-subj="eventExplorer__querySaveConfirm"]').click();
     cy.wait(delay);
     cy.get('.euiToastHeader__title').contains('successfully').should('exist');
   });
@@ -86,7 +90,7 @@ describe('Testing panels table', () => {
   });
 
   it('Displays error toast for invalid panel name', () => {
-    cy.get('.euiButton__text').contains('Create new panel').click();
+    cy.get('.euiButton__text').contains('Create panel').click();
     cy.wait(delay);
     cy.get('.euiButton__text')
       .contains(/^Create$/)
@@ -97,7 +101,7 @@ describe('Testing panels table', () => {
   });
 
   it('Creates a panel and redirects to the panel', () => {
-    cy.get('.euiButton__text').contains('Create new panel').click();
+    cy.get('.euiButton__text').contains('Create panel').click();
     cy.wait(delay);
     cy.get('input.euiFieldText').type(TEST_PANEL);
     cy.get('.euiButton__text')
@@ -164,7 +168,7 @@ describe('Testing panels table', () => {
     cy.get('.euiTextAlign').contains('No Operational Panels').should('exist');
 
     // keep a panel for testing
-    cy.get('.euiButton__text').contains('Create new panel').click();
+    cy.get('.euiButton__text').contains('Create panel').click();
     cy.wait(delay);
     cy.get('input.euiFieldText').type(TEST_PANEL);
     cy.get('.euiButton__text')
@@ -250,8 +254,20 @@ describe('Testing a panel', () => {
   });
 
   it('Add ppl filter to panel', () => {
-    cy.get('.euiFieldText--fullWidth').invoke('attr', 'placeholder').should('contain', 'where');
-    cy.get('.euiFieldText--fullWidth').type(PPL_FILTER);
+    cy.get('[data-test-subj="searchAutocompleteTextArea"]')
+      .click()
+      .wait(1500)
+      .type('where Carrier ')
+      .wait(1500)
+      .type('= ')
+      .wait(1500)
+      .type("'OpenSearch-Air'")
+      .wait(1500)
+      .type('| where Dest ')
+      .wait(1500)
+      .type('= ')
+      .wait(1500)
+      .type("'Munich Airport'");
     cy.get('.euiButton__text').contains('Refresh').click();
     cy.wait(delay * 3);
     cy.get('.xtick').should('contain', 'OpenSearch-Air');
@@ -269,7 +285,7 @@ describe('Testing a panel', () => {
     cy.get('h5')
       .contains(PPL_VISUALIZATIONS_NAMES[1])
       .trigger('mousedown', { which: 1 })
-      .trigger('mousemove', { clientX: 900, clientY: 0 })
+      .trigger('mousemove', { clientX: 1100, clientY: 0 })
       .trigger('mouseup', { force: true });
     cy.wait(delay);
     cy.get('.euiButton__text').contains('Save').click();
@@ -287,12 +303,12 @@ describe('Testing a panel', () => {
     cy.get('.react-resizable-handle')
       .eq(1)
       .trigger('mousedown', { which: 1 })
-      .trigger('mousemove', { clientX: 1600, clientY: 500 })
+      .trigger('mousemove', { clientX: 2000, clientY: 800 })
       .trigger('mouseup', { force: true });
     cy.wait(delay);
     cy.get('.euiButton__text').contains('Save').click();
     cy.wait(delay * 3);
-    cy.get('div.react-grid-layout>div').eq(1).invoke('height').should('match', new RegExp('310'));
+    cy.get('div.react-grid-layout>div').eq(1).invoke('height').should('match', new RegExp('470'));
     cy.wait(delay);
   });
 
@@ -342,18 +358,17 @@ describe('Testing a panel', () => {
     cy.get('.euiContextMenuItem__text').contains('Create New Visualization').click();
     cy.wait(delay * 3);
     cy.url().should('match', new RegExp('(.*)#/event_analytics/explorer'));
-
     cy.get('[id^=autocomplete-textarea]').type(PPL_VISUALIZATIONS[2]);
     cy.get('.euiButton__text').contains('Refresh').click();
-    cy.wait(delay);
-    cy.get('.tab-title').contains('Visualizations').click();
-    cy.wait(delay);
-    cy.get('.euiButton__text').contains('Save').click();
-    cy.wait(delay);
-    cy.get('.euiComboBox__input').type(TEST_PANEL);
+
+    supressResizeObserverIssue();
+    cy.get('button[id="main-content-vis"]').contains('Visualizations').click();
+    cy.wait(delay * 2);
+    cy.get('[data-test-subj="eventExplorer__saveManagementPopover"]').click();
+    cy.get('[data-test-subj="eventExplorer__querySaveComboBox"]').type(TEST_PANEL);
     cy.get(`input[value="${TEST_PANEL}"]`).click();
-    cy.get('.euiFieldText').type(PPL_VISUALIZATIONS_NAMES[2]);
-    cy.get('.euiPopoverFooter>.euiFlexGroup>:nth-child(2)').contains('Save').click();
+    cy.get('[data-test-subj="eventExplorer__querySaveName"]').type(PPL_VISUALIZATIONS_NAMES[2]);
+    cy.get('[data-test-subj="eventExplorer__querySaveConfirm"]').click();
     cy.wait(delay);
     cy.get('.euiToastHeader__title').contains('successfully').should('exist');
     moveToTestPanel();
@@ -366,14 +381,18 @@ describe('Testing a panel', () => {
     moveToTestPanel();
     cy.get('h5').contains(PPL_VISUALIZATIONS_NAMES[0]).should('exist');
     cy.get('button[aria-label="actionMenuButton"]').eq(0).click();
+    supressResizeObserverIssue();
     cy.get('.euiContextMenu__itemLayout > .euiContextMenuItem__text').contains('Edit').click();
     cy.wait(delay * 3);
     cy.url().should('match', new RegExp('(.*)#/event_analytics/explorer'));
     cy.wait(delay);
-    cy.get('.euiButton__text').contains('Save').click();
+    cy.get('[data-test-subj="eventExplorer__saveManagementPopover"]').click();
     cy.wait(delay);
-    cy.get('.euiFieldText').focus().clear().type(NEW_VISUALIZATION_NAME);
-    cy.get('.euiPopoverFooter>.euiFlexGroup>:nth-child(2)').contains('Save').click();
+    cy.get('[data-test-subj="eventExplorer__querySaveName"]')
+      .focus()
+      .clear()
+      .type(NEW_VISUALIZATION_NAME);
+    cy.get('[data-test-subj="eventExplorer__querySaveConfirm"]').click();
     cy.wait(delay);
     cy.get('.euiToastHeader__title').contains('successfully').should('exist');
     moveToTestPanel();
@@ -414,7 +433,7 @@ describe('Add samples and clean up all test data', () => {
 
   it('Delete visualizations from event analytics', () => {
     moveToEventsHome();
-    cy.get('span.euiButtonEmpty__text').contains('Rows per page: 10').click();
+    cy.get('[data-test-subj="tablePaginationPopoverButton"]').click();
     cy.get('.euiContextMenuItem__text').contains('50 rows').click();
     cy.get('.euiCheckbox__input[data-test-subj="checkboxSelectAll"]').click();
     cy.wait(delay);

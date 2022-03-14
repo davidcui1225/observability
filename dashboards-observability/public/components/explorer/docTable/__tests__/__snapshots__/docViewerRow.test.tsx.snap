@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Datagrid Doc viewer row component Renders Doc viewer row component 1`] = `
-<DocViewRow
+<ForwardRef
   doc={
     Object {
       "Carrier": "JetBeats",
@@ -22,7 +22,7 @@ exports[`Datagrid Doc viewer row component Renders Doc viewer row component 1`] 
   >
     <td
       className="osdDocTableCell__toggleDetails"
-      key="grid-td-2"
+      key="grid-td-3"
     >
       <button
         className="euiButtonIcon euiButtonIcon--text"
@@ -55,10 +55,10 @@ exports[`Datagrid Doc viewer row component Renders Doc viewer row component 1`] 
     </td>
     <td
       className="osdDocTableCell__dataField eui-textBreakAll eui-textBreakWord"
-      key="datagrid-cell-1"
+      key="datagrid-cell-2"
     >
       45.957544288332315
     </td>
   </tr>
-</DocViewRow>
+</ForwardRef>
 `;

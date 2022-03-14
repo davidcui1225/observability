@@ -2,6 +2,19 @@
 
 So you want to contribute code to this project? Excellent! We're glad you're here. Here's what you need to do.
 
+### Install Prerequisites
+
+#### JDK 11
+
+OpenSearch builds using Java 11 at a minimum. This means you must have a JDK 11
+installed with the environment variable `JAVA_HOME` referencing the path to Java home
+for your JDK 11 installation, e.g. `JAVA_HOME=/usr/lib/jvm/jdk-11`.
+
+By default, tests use the same runtime as `JAVA_HOME`. However, since OpenSearch
+supports JDK 8, the build supports compiling with JDK 11 and testing on a different
+version of JDK runtime. To do this, set `RUNTIME_JAVA_HOME` pointing to the Java home of
+another JDK installation, e.g. `RUNTIME_JAVA_HOME=/usr/lib/jvm/jdk-8`.
+
 ### Setup
 
 1. Download OpenSearch for the version that matches the [OpenSearch Dashboards version specified in package.json](./dashboards-observability/package.json#L5).
@@ -43,3 +56,11 @@ Example output: `./build/observability*.zip`
 ### Submitting Changes
 
 See [CONTRIBUTING](CONTRIBUTING.md).
+
+### Backports
+
+The Github workflow in [`backport.yml`](.github/workflows/backport.yml) creates backport PRs automatically when the original PR
+with an appropriate label `backport <backport-branch-name>` is merged to main with the backport workflow run successfully on the
+PR. For example, if a PR on main needs to be backported to `1.x` branch, add a label `backport 1.x` to the PR and make sure the
+backport workflow runs on the PR along with other checks. Once this PR is merged to main, the workflow will create a backport PR
+to the `1.x` branch.

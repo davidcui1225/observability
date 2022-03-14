@@ -118,7 +118,13 @@ export function getServiceMapGraph(
       const color = getServiceMapScaleColor(percent, idSelected);
       styleOptions = {
         borderWidth: 0,
-        color: relatedServices!.indexOf(service) >= 0 ? `rgba(${color}, 1)` : `rgba(${color}, 0.3)`,
+        color: relatedServices!.indexOf(service) >= 0 ? `rgba(${color}, 1)` : `rgba(${color}, 0.2)`,
+        font: {
+          color:
+            relatedServices!.indexOf(service) >= 0
+              ? `rgba(72, 122, 180, 1)`
+              : `rgba(72, 122, 180, 0.2)`,
+        },
       };
     } else {
       // service nodes that are not matched under traceGroup filter
@@ -135,35 +141,40 @@ export function getServiceMapGraph(
       };
     }
 
-    const message =
-      { latency: 'Average latency: ', error_rate: 'Error rate: ', throughput: 'Throughput: ' }[
-        idSelected
-      ] +
-      (value! >= 0
-        ? value + (idSelected === 'latency' ? 'ms' : idSelected === 'error_rate' ? '%' : '')
-        : 'N/A');
+    let hover = service;
+    hover += `\n\nAverage latency: ${
+      map[service].latency! >= 0 ? map[service].latency + 'ms' : 'N/A'
+    }`;
+    hover += `\nError rate: ${
+      map[service].error_rate! >= 0 ? map[service].error_rate + '%' : 'N/A'
+    }`;
+    hover += `\nThroughput: ${map[service].throughput! >= 0 ? map[service].throughput : 'N/A'}`;
+    if (map[service].throughputPerMinute != null)
+      hover += ` (${map[service].throughputPerMinute} per minute)`;
 
     return {
       id: map[service].id,
       label: service,
       size: service === currService ? 30 : 15,
-      title: `${service}\n\n${message}`,
+      title: hover,
       ...styleOptions,
     };
   });
   const edges: Array<{ from: number; to: number; color: string }> = [];
   const edgeColor = uiSettingsService.get('theme:darkMode') ? '255, 255, 255' : '0, 0, 0';
   Object.keys(map).map((service) => {
-    map[service].targetServices.map((target) => {
-      edges.push({
-        from: map[service].id,
-        to: map[target].id,
-        color:
-          relatedServices!.indexOf(service) >= 0 && relatedServices!.indexOf(target) >= 0
-            ? `rgba(${edgeColor}, 1)`
-            : `rgba(${edgeColor}, 0.3)`,
+    map[service].targetServices
+      .filter((target) => map[target])
+      .map((target) => {
+        edges.push({
+          from: map[service].id,
+          to: map[target].id,
+          color:
+            relatedServices!.indexOf(service) >= 0 && relatedServices!.indexOf(target) >= 0
+              ? `rgba(${edgeColor}, 1)`
+              : `rgba(${edgeColor}, 0.2)`,
+        });
       });
-    });
   });
   return { graph: { nodes, edges } };
 }
@@ -285,7 +296,9 @@ export const filtersToDsl = (
   filters: FilterType[],
   query: string,
   startTime: string,
-  endTime: string
+  endTime: string,
+  page?: string,
+  appConfigs: FilterType[] = []
 ) => {
   const DSL: any = {
     query: {
@@ -396,6 +409,22 @@ export const filtersToDsl = (
       }
       DSL.query.bool[filter.inverted ? 'must_not' : 'must'].push(filterQuery);
     });
+
+  if (page === 'app') {
+    DSL.query.bool.minimum_should_match = 1;
+    appConfigs.forEach((config) => {
+      let appQuery = {};
+      const appField = config.field;
+      const appValue = config.value;
+      appQuery = {
+        term: {
+          [appField]: appValue,
+        },
+      };
+      DSL.query.bool.minimum_should_match = 1;
+      DSL.query.bool.should.push(appQuery);
+    });
+  }
 
   return DSL;
 };

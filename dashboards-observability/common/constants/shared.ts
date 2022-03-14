@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import CSS from 'csstype';
+
 // Client route
 export const PPL_BASE = '/api/ppl';
 export const PPL_SEARCH = '/search';
@@ -26,12 +28,15 @@ export const observabilityTitle = 'Observability';
 export const observabilityPluginOrder = 6000;
 
 // Shared Constants
-export const SQL_DOCUMENTATION_URL ='https://opensearch.org/docs/latest/search-plugins/sql/index/'
-export const PPL_DOCUMENTATION_URL ='https://opensearch.org/docs/latest/observability/ppl/commands/'
+export const SQL_DOCUMENTATION_URL = 'https://opensearch.org/docs/latest/search-plugins/sql/index/';
+export const PPL_DOCUMENTATION_URL =
+  'https://opensearch.org/docs/latest/observability-plugin/ppl/commands/';
 export const UI_DATE_FORMAT = 'MM/DD/YYYY hh:mm A';
-export const PPL_DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss';
+export const PPL_DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss.SSSSSS';
+export const SPAN_REGEX = /span/;
+export const PPL_SPAN_REGEX = /by\s*span/i;
 export const PPL_STATS_REGEX = /\|\s*stats/i;
-export const PPL_INDEX_INSERT_POINT_REGEX = /(search source|source|index)\s*=\s*([^\s]+)(.*)/i;
+export const PPL_INDEX_INSERT_POINT_REGEX = /(search source|source|index)\s*=\s*([^|\s]+)(.*)/i;
 export const PPL_INDEX_REGEX = /(search source|source|index)\s*=\s*([^|\s]+)/i;
 export const PPL_NEWLINE_REGEX = /[\n\r]+/g;
 
@@ -59,3 +64,13 @@ export const PLOTLY_COLOR = [
 ];
 
 export const LONG_CHART_COLOR = PLOTLY_COLOR[1];
+
+export const pageStyles: CSS.Properties = {
+  float: 'left',
+  width: '100%',
+  maxWidth: '1130px',
+};
+
+export const NUMERICAL_FIELDS = ['short', 'integer', 'long', 'float', 'double'];
+
+export const ENABLED_VIS_TYPES = ['bar', 'horizontal_bar', 'line', 'pie', 'heatmap', 'text'];

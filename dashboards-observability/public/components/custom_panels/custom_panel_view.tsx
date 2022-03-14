@@ -2,14 +2,15 @@
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  */
+/* eslint-disable no-console */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import {
+  EuiBadge,
   EuiBreadcrumb,
   EuiButton,
-  EuiButtonIcon,
   EuiContextMenu,
   EuiContextMenuPanelDescriptor,
-  EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
   EuiLink,
@@ -22,31 +23,42 @@ import {
   EuiPopover,
   EuiSpacer,
   EuiSuperDatePicker,
-  EuiText,
   EuiTitle,
   OnTimeChangeProps,
   ShortDate,
 } from '@elastic/eui';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
+import { DurationRange } from '@elastic/eui/src/components/date_picker/types';
+import moment from 'moment';
+import DSLService from '../../services/requests/dsl';
 import { CoreStart } from '../../../../../src/core/public';
 import { EmptyPanelView } from './panel_modules/empty_panel';
 import {
   CREATE_PANEL_MESSAGE,
   CUSTOM_PANELS_API_PREFIX,
 } from '../../../common/constants/custom_panels';
-import { VisualizationType } from '../../../common/types/custom_panels';
+import { SavedVisualizationType, VisualizationType } from '../../../common/types/custom_panels';
 import { PanelGrid } from './panel_modules/panel_grid';
 import { DeletePanelModal, getCustomModal } from './helpers/modal_containers';
 import PPLService from '../../services/requests/ppl';
-import { isDateValid, convertDateTime, onTimeChange, isPPLFilterValid } from './helpers/utils';
-import { DurationRange } from '@elastic/eui/src/components/date_picker/types';
+import {
+  isDateValid,
+  convertDateTime,
+  onTimeChange,
+  isPPLFilterValid,
+  fetchVisualizationById,
+} from './helpers/utils';
 import { UI_DATE_FORMAT } from '../../../common/constants/shared';
-import { ChangeEvent } from 'react';
-import moment from 'moment';
 import { VisaulizationFlyout } from './panel_modules/visualization_flyout';
 import { uiSettingsService } from '../../../common/utils';
 import { PPLReferenceFlyout } from '../common/helpers';
+import { Autocomplete } from '../common/search/autocomplete';
+import {
+  getSuggestionsAfterSource,
+  onItemSelect,
+  parseForIndices,
+} from '../common/search/autocomplete_logic';
 
 /*
  * "CustomPanelsView" module used to render an Operational Panel
@@ -63,16 +75,17 @@ import { PPLReferenceFlyout } from '../common/helpers';
  * setToast: create Toast function
  */
 
-type Props = {
+interface Props {
   panelId: string;
+  page: 'app' | 'operationalPanels';
+  appId?: string;
+  appName?: string;
   http: CoreStart['http'];
   pplService: PPLService;
+  dslService: DSLService;
   chrome: CoreStart['chrome'];
   parentBreadcrumb: EuiBreadcrumb[];
-  renameCustomPanel: (
-    editedCustomPanelName: string,
-    editedCustomPanelId: string
-  ) => Promise<void> | undefined;
+  renameCustomPanel: (editedCustomPanelName: string, editedCustomPanelId: string) => Promise<void>;
   deleteCustomPanel: (customPanelId: string, customPanelName: string) => Promise<any>;
   cloneCustomPanel: (clonedCustomPanelName: string, clonedCustomPanelId: string) => Promise<string>;
   setToast: (
@@ -81,32 +94,49 @@ type Props = {
     text?: React.ReactChild | undefined,
     side?: string | undefined
   ) => void;
-};
+  startTime: string;
+  endTime: string;
+  setStartTime: any;
+  setEndTime: any;
+  switchToEvent?: any;
+  switchToEditViz?: any;
+}
 
 export const CustomPanelView = ({
   panelId,
+  page,
+  appId,
+  appName,
   http,
   pplService,
+  dslService,
   chrome,
   parentBreadcrumb,
+  startTime,
+  endTime,
+  setStartTime,
+  setEndTime,
   renameCustomPanel,
   deleteCustomPanel,
   cloneCustomPanel,
   setToast,
+  switchToEvent,
+  switchToEditViz,
 }: Props) => {
   const [openPanelName, setOpenPanelName] = useState('');
   const [panelCreatedTime, setPanelCreatedTime] = useState('');
   const [pplFilterValue, setPPLFilterValue] = useState('');
+  const [baseQuery, setBaseQuery] = useState('');
   const [onRefresh, setOnRefresh] = useState(false);
 
   const [inputDisabled, setInputDisabled] = useState(true);
   const [addVizDisabled, setAddVizDisabled] = useState(false);
   const [editDisabled, setEditDisabled] = useState(false);
   const [dateDisabled, setDateDisabled] = useState(false);
-  const [panelVisualizations, setPanelVisualizations] = useState<Array<VisualizationType>>([]);
+  const [panelVisualizations, setPanelVisualizations] = useState<VisualizationType[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false); // Modal Toggle
-  const [modalLayout, setModalLayout] = useState(<EuiOverlayMask></EuiOverlayMask>); // Modal Layout
+  const [modalLayout, setModalLayout] = useState(<EuiOverlayMask />); // Modal Layout
   const [isVizPopoverOpen, setVizPopoverOpen] = useState(false); // Add Visualization Popover
   const [isFlyoutVisible, setIsFlyoutVisible] = useState(false); // Add Visualization Flyout
   const [isFlyoutReplacement, setisFlyoutReplacement] = useState<boolean | undefined>(false);
@@ -114,6 +144,8 @@ export const CustomPanelView = ({
   const [panelsMenuPopover, setPanelsMenuPopover] = useState(false);
   const [editActionType, setEditActionType] = useState('');
   const [isHelpFlyoutVisible, setHelpIsFlyoutVisible] = useState(false);
+
+  const appPanel = page === 'app';
 
   const closeHelpFlyout = () => {
     setAddVizDisabled(false);
@@ -127,8 +159,6 @@ export const CustomPanelView = ({
 
   // DateTimePicker States
   const [recentlyUsedRanges, setRecentlyUsedRanges] = useState<DurationRange[]>([]);
-  const [start, setStart] = useState<ShortDate>('now-30m');
-  const [end, setEnd] = useState<ShortDate>('now');
 
   const getVizContextPanels = (closeVizPopover?: () => void) => {
     return [
@@ -169,8 +199,8 @@ export const CustomPanelView = ({
         setOpenPanelName(res.operationalPanel.name);
         setPanelCreatedTime(res.createdTimeMs);
         setPPLFilterValue(res.operationalPanel.queryFilter.query);
-        setStart(res.operationalPanel.timeRange.from);
-        setEnd(res.operationalPanel.timeRange.to);
+        setStartTime(startTime ? startTime : res.operationalPanel.timeRange.from);
+        setEndTime(endTime ? endTime : res.operationalPanel.timeRange.to);
         setPanelVisualizations(res.operationalPanel.visualizations);
       })
       .catch((err) => {
@@ -186,8 +216,8 @@ export const CustomPanelView = ({
     setVizPopoverOpen(false);
   };
 
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setPPLFilterValue(e.target.value);
+  const handleQueryChange = (newQuery: string) => {
+    setPPLFilterValue(newQuery);
   };
 
   const closeModal = () => {
@@ -198,18 +228,14 @@ export const CustomPanelView = ({
     setIsModalVisible(true);
   };
 
-  const onKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') onRefreshFilters(start, end);
-  };
-
   const onDatePickerChange = (props: OnTimeChangeProps) => {
     onTimeChange(
       props.start,
       props.end,
       recentlyUsedRanges,
       setRecentlyUsedRanges,
-      setStart,
-      setEnd
+      setStartTime,
+      setEndTime
     );
     onRefreshFilters(props.start, props.end);
   };
@@ -283,7 +309,7 @@ export const CustomPanelView = ({
 
   // toggle between panel edit mode
   const editPanel = (editType: string) => {
-    editMode ? setEditMode(false) : setEditMode(true);
+    setEditMode(!editMode);
     if (editType === 'cancel') fetchCustomPanel();
     setEditActionType(editType);
   };
@@ -328,8 +354,29 @@ export const CustomPanelView = ({
     }
   };
 
-  const onRefreshFilters = (startTime: ShortDate, endTime: ShortDate) => {
-    if (!isDateValid(convertDateTime(startTime), convertDateTime(endTime, false), setToast)) {
+  const buildBaseQuery = async () => {
+    const indices: string[] = [];
+    for (let i = 0; i < panelVisualizations.length; i++) {
+      const visualizationId = panelVisualizations[i].savedVisualizationId;
+      // TODO: create route to get list of visualizations in one call
+      const visData: SavedVisualizationType = await fetchVisualizationById(
+        http,
+        visualizationId,
+        (value: string) => setToast(value, 'danger')
+      );
+      const moreIndices = parseForIndices(visData.query);
+      for (let j = 0; j < moreIndices.length; j++) {
+        if (!indices.includes(moreIndices[j])) {
+          indices.push(moreIndices[j]);
+        }
+      }
+    }
+    setBaseQuery('source = ' + indices.join(', '));
+    return;
+  };
+
+  const onRefreshFilters = (start: ShortDate, end: ShortDate) => {
+    if (!isDateValid(convertDateTime(start), convertDateTime(end, false), setToast)) {
       return;
     }
 
@@ -338,15 +385,15 @@ export const CustomPanelView = ({
     }
 
     const panelFilterBody = {
-      panelId: panelId,
+      panelId,
       query: pplFilterValue,
       language: 'ppl',
-      to: endTime,
-      from: startTime,
+      to: end,
+      from: start,
     };
 
     http
-      .patch(`${CUSTOM_PANELS_API_PREFIX}/panels/filter`, {
+      .post(`${CUSTOM_PANELS_API_PREFIX}/panels/filter`, {
         body: JSON.stringify(panelFilterBody),
       })
       .then((res) => {
@@ -362,8 +409,8 @@ export const CustomPanelView = ({
     http
       .post(`${CUSTOM_PANELS_API_PREFIX}/visualizations`, {
         body: JSON.stringify({
-          panelId: panelId,
-          savedVisualizationId: savedVisualizationId,
+          panelId,
+          savedVisualizationId,
         }),
       })
       .then(async (res) => {
@@ -376,7 +423,7 @@ export const CustomPanelView = ({
       });
   };
 
-  //Add Visualization Button
+  // Add Visualization Button
   const addVisualizationButton = (
     <EuiButton
       iconType="arrowDown"
@@ -407,14 +454,16 @@ export const CustomPanelView = ({
         panelId={panelId}
         closeFlyout={closeFlyout}
         pplFilterValue={pplFilterValue}
-        start={start}
-        end={end}
+        start={startTime}
+        end={endTime}
         setToast={setToast}
         http={http}
         pplService={pplService}
         setPanelVisualizations={setPanelVisualizations}
         isFlyoutReplacement={isFlyoutReplacement}
         replaceVisualizationId={replaceVisualizationId}
+        appPanel={appPanel}
+        appId={appId}
       />
     );
   }
@@ -461,6 +510,13 @@ export const CustomPanelView = ({
     },
   ];
 
+  // Set saved object id to empty when redirect away from events tab
+  useEffect(() => {
+    if (appPanel) {
+      switchToEditViz('');
+    }
+  });
+
   // Fetch the custom panel on Initial Mount
   useEffect(() => {
     fetchCustomPanel();
@@ -470,102 +526,136 @@ export const CustomPanelView = ({
   // Disabled when there no visualizations in panels or when the panel is in edit mode
   useEffect(() => {
     checkDisabledInputs();
-  }, [panelVisualizations, editMode]);
+  }, [editMode]);
 
-  // Edit the breadcurmb when panel name changes
+  // Build base query with all of the indices included in the current visualizations
   useEffect(() => {
-    chrome.setBreadcrumbs([
-      ...parentBreadcrumb,
-      {
-        text: openPanelName,
-        href: `${_.last(parentBreadcrumb).href}${panelId}`,
-      },
-    ]);
+    checkDisabledInputs();
+    buildBaseQuery();
+  }, [panelVisualizations]);
+
+  // Edit the breadcrumb when panel name changes
+  useEffect(() => {
+    let newBreadcrumb;
+    if (appPanel) {
+      newBreadcrumb = [
+        ...parentBreadcrumb,
+        {
+          text: 'Application analytics',
+          href: '#/application_analytics',
+        },
+        {
+          text: appName,
+          href: `${_.last(parentBreadcrumb).href}${appId}`,
+        },
+      ];
+    } else {
+      newBreadcrumb = [
+        ...parentBreadcrumb,
+        {
+          text: openPanelName,
+          href: `${_.last(parentBreadcrumb).href}${panelId}`,
+        },
+      ];
+    }
+    chrome.setBreadcrumbs(newBreadcrumb);
   }, [panelId, openPanelName]);
 
   return (
     <div>
-      <EuiPage>
+      <EuiPage id={`panelView${appPanel ? 'InApp' : ''}`}>
         <EuiPageBody component="div">
           <EuiPageHeader>
-            <EuiPageHeaderSection>
-              <EuiTitle size="l">
-                <h1>{openPanelName}</h1>
-              </EuiTitle>
-              <EuiFlexItem>
-                <EuiSpacer size="s" />
-              </EuiFlexItem>
-              Created on {moment(panelCreatedTime).format(UI_DATE_FORMAT)}
-            </EuiPageHeaderSection>
-            <EuiPageHeaderSection>
-              <EuiFlexGroup gutterSize="s">
-                {editMode ? (
-                  <>
+            {appPanel || (
+              <EuiPageHeaderSection>
+                <EuiTitle size="l">
+                  <h1>{openPanelName}</h1>
+                </EuiTitle>
+                <EuiFlexItem>
+                  <EuiSpacer size="s" />
+                </EuiFlexItem>
+                Created on {moment(panelCreatedTime).format(UI_DATE_FORMAT)}
+              </EuiPageHeaderSection>
+            )}
+            {appPanel || (
+              <EuiPageHeaderSection>
+                <EuiFlexGroup gutterSize="s">
+                  {editMode ? (
+                    <>
+                      <EuiFlexItem>
+                        <EuiButton
+                          iconType="cross"
+                          color="danger"
+                          onClick={() => editPanel('cancel')}
+                        >
+                          Cancel
+                        </EuiButton>
+                      </EuiFlexItem>
+                      <EuiFlexItem>
+                        <EuiButton iconType="save" onClick={() => editPanel('save')}>
+                          Save
+                        </EuiButton>
+                      </EuiFlexItem>
+                    </>
+                  ) : (
                     <EuiFlexItem>
                       <EuiButton
-                        iconType="cross"
-                        color="danger"
-                        onClick={() => editPanel('cancel')}
+                        iconType="pencil"
+                        onClick={() => editPanel('edit')}
+                        disabled={editDisabled}
                       >
-                        Cancel
+                        Edit
                       </EuiButton>
                     </EuiFlexItem>
-                    <EuiFlexItem>
-                      <EuiButton iconType="save" onClick={() => editPanel('save')}>
-                        Save
-                      </EuiButton>
-                    </EuiFlexItem>
-                  </>
-                ) : (
-                  <EuiFlexItem>
-                    <EuiButton
-                      iconType="pencil"
-                      onClick={() => editPanel('edit')}
-                      disabled={editDisabled}
+                  )}
+                  <EuiFlexItem grow={false}>
+                    <EuiPopover
+                      panelPaddingSize="none"
+                      withTitle
+                      button={panelActionsButton}
+                      isOpen={panelsMenuPopover}
+                      closePopover={() => setPanelsMenuPopover(false)}
                     >
-                      Edit
-                    </EuiButton>
+                      <EuiContextMenu initialPanelId={0} panels={panelActionsMenu} />
+                    </EuiPopover>
                   </EuiFlexItem>
-                )}
-                <EuiFlexItem grow={false}>
-                  <EuiPopover
-                    panelPaddingSize="none"
-                    withTitle
-                    button={panelActionsButton}
-                    isOpen={panelsMenuPopover}
-                    closePopover={() => setPanelsMenuPopover(false)}
-                  >
-                    <EuiContextMenu initialPanelId={0} panels={panelActionsMenu} />
-                  </EuiPopover>
-                </EuiFlexItem>
-                <EuiFlexItem grow={false}>
-                  <EuiPopover
-                    id="addVisualizationContextMenu"
-                    button={addVisualizationButton}
-                    isOpen={isVizPopoverOpen}
-                    closePopover={closeVizPopover}
-                    panelPaddingSize="none"
-                    anchorPosition="downLeft"
-                  >
-                    <EuiContextMenu
-                      initialPanelId={0}
-                      panels={getVizContextPanels(closeVizPopover)}
-                    />
-                  </EuiPopover>
-                </EuiFlexItem>
-              </EuiFlexGroup>
-            </EuiPageHeaderSection>
+                  <EuiFlexItem grow={false}>
+                    <EuiPopover
+                      id="addVisualizationContextMenu"
+                      button={addVisualizationButton}
+                      isOpen={isVizPopoverOpen}
+                      closePopover={closeVizPopover}
+                      panelPaddingSize="none"
+                      anchorPosition="downLeft"
+                    >
+                      <EuiContextMenu
+                        initialPanelId={0}
+                        panels={getVizContextPanels(closeVizPopover)}
+                      />
+                    </EuiPopover>
+                  </EuiFlexItem>
+                </EuiFlexGroup>
+              </EuiPageHeaderSection>
+            )}
           </EuiPageHeader>
           <EuiPageContentBody>
             <EuiFlexGroup gutterSize="s">
               <EuiFlexItem>
-                <EuiFieldText
-                  placeholder="Use PPL 'where' clauses to add filters on all visualizations [where Carrier = 'OpenSearch-Air']"
-                  value={pplFilterValue}
-                  fullWidth={true}
-                  onChange={onChange}
-                  onKeyPress={onKeyPress}
-                  disabled={inputDisabled}
+                <Autocomplete
+                  key={'autocomplete-search-bar'}
+                  query={pplFilterValue}
+                  tempQuery={pplFilterValue}
+                  baseQuery={baseQuery}
+                  handleQueryChange={handleQueryChange}
+                  handleQuerySearch={() => onRefreshFilters(startTime, endTime)}
+                  dslService={dslService}
+                  getSuggestions={getSuggestionsAfterSource}
+                  onItemSelect={onItemSelect}
+                  tabId={'panels-filter'}
+                  placeholder={
+                    "Use PPL 'where' clauses to add filters on all visualizations [where Carrier = 'OpenSearch-Air']"
+                  }
+                  possibleCommands={[{ label: 'where' }]}
                   append={
                     <EuiLink
                       aria-label="ppl-info"
@@ -575,24 +665,68 @@ export const CustomPanelView = ({
                       PPL
                     </EuiLink>
                   }
+                  inputDisabled={inputDisabled}
                 />
               </EuiFlexItem>
               <EuiFlexItem grow={false}>
                 <EuiSuperDatePicker
                   dateFormat={uiSettingsService.get('dateFormat')}
-                  start={start}
-                  end={end}
+                  start={startTime}
+                  end={endTime}
                   onTimeChange={onDatePickerChange}
                   recentlyUsedRanges={recentlyUsedRanges}
                   isDisabled={dateDisabled}
                 />
               </EuiFlexItem>
+              {appPanel && (
+                <>
+                  {editMode ? (
+                    <>
+                      <EuiFlexItem grow={false}>
+                        <EuiButton
+                          iconType="cross"
+                          color="danger"
+                          onClick={() => editPanel('cancel')}
+                        >
+                          Cancel
+                        </EuiButton>
+                      </EuiFlexItem>
+                      <EuiFlexItem grow={false}>
+                        <EuiButton iconType="save" onClick={() => editPanel('save')}>
+                          Save
+                        </EuiButton>
+                      </EuiFlexItem>
+                    </>
+                  ) : (
+                    <EuiFlexItem grow={false}>
+                      <EuiButton
+                        iconType="pencil"
+                        onClick={() => editPanel('edit')}
+                        disabled={editDisabled}
+                      >
+                        Edit
+                      </EuiButton>
+                    </EuiFlexItem>
+                  )}
+                  <EuiFlexItem grow={false}>
+                    <EuiButton
+                      iconType="plusInCircle"
+                      onClick={switchToEvent}
+                      isDisabled={addVizDisabled}
+                    >
+                      Add
+                    </EuiButton>
+                  </EuiFlexItem>
+                </>
+              )}
             </EuiFlexGroup>
             <EuiSpacer size="l" />
             {panelVisualizations.length === 0 && (
               <EmptyPanelView
                 addVizDisabled={addVizDisabled}
+                page={page}
                 getVizContextPanels={getVizContextPanels}
+                switchToEvent={switchToEvent}
               />
             )}
             <PanelGrid
@@ -603,13 +737,15 @@ export const CustomPanelView = ({
               setPanelVisualizations={setPanelVisualizations}
               editMode={editMode}
               pplService={pplService}
-              startTime={start}
-              endTime={end}
+              startTime={startTime}
+              endTime={endTime}
+              fromApp={appPanel}
               onRefresh={onRefresh}
               cloneVisualization={cloneVisualization}
               pplFilterValue={pplFilterValue}
               showFlyout={showFlyout}
               editActionType={editActionType}
+              switchToEditViz={switchToEditViz}
             />
           </EuiPageContentBody>
         </EuiPageBody>
