@@ -21,7 +21,7 @@ import _ from 'lodash';
 import { DatePicker } from './date_picker';
 import '@algolia/autocomplete-theme-classic';
 import { Autocomplete } from './autocomplete';
-import { SavePanel } from '../../explorer/save_panel';
+import { SavePanel } from '../../event_analytics/explorer/save_panel';
 import { PPLReferenceFlyout } from '../helpers';
 import { uiSettingsService } from '../../../../common/utils';
 import { APP_ANALYTICS_TAB_ID_REGEX } from '../../../../common/constants/explorer';
@@ -77,6 +77,7 @@ export const Search = (props: any) => {
     onItemSelect,
     tabId = '',
     baseQuery = '',
+    stopLive,
   } = props;
 
   const appLogEvents = tabId.match(APP_ANALYTICS_TAB_ID_REGEX);
@@ -95,7 +96,7 @@ export const Search = (props: any) => {
   let flyout;
   if (isFlyoutVisible) {
     flyout = <PPLReferenceFlyout module="explorer" closeFlyout={closeFlyout} />;
-  };
+  }
 
   const Savebutton = (
     <EuiButton
@@ -160,10 +161,11 @@ export const Search = (props: any) => {
               liveStreamChecked={props.liveStreamChecked}
               onLiveStreamChange={props.onLiveStreamChange}
               handleTimePickerChange={(timeRange: string[]) => handleTimePickerChange(timeRange)}
-              handleTimeRangePickerRefresh={handleTimeRangePickerRefresh} />
+              handleTimeRangePickerRefresh={handleTimeRangePickerRefresh}
+            />
           )}
-          </EuiFlexItem>
-          {!showSavePanelOptionsList && (
+        </EuiFlexItem>
+        {!showSavePanelOptionsList && (
           <EuiFlexItem className="euiFlexItem--flexGrowZero live-tail">
             <EuiPopover
               panelPaddingSize="none"
@@ -174,7 +176,19 @@ export const Search = (props: any) => {
               <EuiContextMenuPanel items={popoverItems} />
             </EuiPopover>
           </EuiFlexItem>
-          )}
+        )}
+        {isLiveTailOn && (
+          <EuiFlexItem grow={false}>
+            <EuiButton
+              iconType="stop"
+              onClick={() => stopLive()}
+              color="danger"
+              data-test-subj="eventLiveTail__off"
+            >
+            Stop
+            </EuiButton>
+          </EuiFlexItem>
+        )}
         {showSaveButton && searchBarConfigs[selectedSubTabId]?.showSaveButton && (
           <>
             <EuiFlexItem key={'search-save-'} className="euiFlexItem--flexGrowZero">

@@ -16,7 +16,7 @@ import {
   samplePPLResponse,
 } from '../../../../../../test/panels_constants';
 
-describe.skip('Visualization Container Component', () => {
+describe('Visualization Container Component', () => {
   configure({ adapter: new Adapter() });
 
   it('renders add visualization container', async () => {
@@ -39,6 +39,9 @@ describe.skip('Visualization Container Component', () => {
     const showFlyout = jest.fn();
     const removeVisualization = jest.fn();
     const pplService = new PPLService(httpClientMock);
+    const onEditClick = (savedVisId: string) => {
+      window.location.assign(`#/event_analytics/explorer/${savedVisId}`);
+    };
 
     const wrapper = mount(
       <VisualizationContainer
@@ -54,6 +57,7 @@ describe.skip('Visualization Container Component', () => {
         pplFilterValue={pplFilterValue}
         showFlyout={showFlyout}
         removeVisualization={removeVisualization}
+        onEditClick={onEditClick}
       />
     );
     wrapper.update();
