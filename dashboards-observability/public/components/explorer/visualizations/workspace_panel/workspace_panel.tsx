@@ -16,13 +16,16 @@ interface IWorkSpacePanel {
   curVisId: string;
   setCurVisId: any;
   visualizations: any;
+  handleAnnotations: any;
 }
 
-export function WorkspacePanel({ visualizations }: IWorkSpacePanel) {
+export function WorkspacePanel({ visualizations }: IWorkSpacePanel, { handleAnnotations }: IWorkSpacePanel) {
   const [isTableViewOn, setIsTableViewOn] = useState(false);
   const VisualizationPanel = useMemo(() => {
-    return <Visualization visualizations={visualizations} />;
+    return <Visualization visualizations={visualizations} handleAnnotations={handleAnnotations} />;
   }, [visualizations]);
+
+  console.log('handleAnnotations is', handleAnnotations);
 
   return (
     <>

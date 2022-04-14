@@ -8,7 +8,7 @@ import { take, merge, isEmpty } from 'lodash';
 
 interface IVisualizationChart {}
 
-export const VisualizationChart = ({ visualizations }: IVisualizationChart) => {
+export const VisualizationChart = ({ visualizations }: IVisualizationChart, handleAnnotations: any) => {
   const { data, vis } = visualizations;
   const {
     metadata: { fields },
@@ -32,6 +32,7 @@ export const VisualizationChart = ({ visualizations }: IVisualizationChart) => {
 
   return (
     <Visualization
+      handleAnnotations={handleAnnotations}
       visualizations={visualizations}
       layout={finalFigureLayout}
       config={finalFigureConfig}

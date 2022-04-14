@@ -78,6 +78,7 @@ import {
   onItemSelect,
 } from '../common/search/autocomplete_logic';
 import { formatError } from './utils';
+import { onClickAnnotations } from '../visualizations/annotations';
 
 const TYPE_TAB_MAPPING = {
   [SAVED_QUERY]: TAB_EVENT_ID,
@@ -769,6 +770,7 @@ export const Explorer = ({
         handleAddField={handleAddField}
         handleRemoveField={handleRemoveField}
         visualizations={visualizations}
+        handleAnnotations={onClickAnnotations}
       />
     );
   };

@@ -3,22 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EuiButton, EuiCommentList, EuiCommentProps, EuiFieldText, EuiFlexGroup, EuiFlexItem, EuiIcon, EuiPopover, EuiSpacer, EuiText } from '@elastic/eui';
+import { EuiButton, EuiButtonEmpty, EuiCommentList, EuiCommentProps, EuiFieldText, EuiFlexGroup, EuiFlexItem, EuiIcon, EuiPopover, EuiSpacer, EuiText } from '@elastic/eui';
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { Popover, Whisper, Button } from 'rsuite';
-import { Widget } from 'react-chat-widget';
 import CSS from 'csstype';
 import { Paragraphs } from '../notebooks/components/paragraph_components/paragraphs';
 
-// const iconStyle: CSS.Properties = {
-//   marginTop: '45px',
-//   minWidth: '25px',
-// };
-
 const collaborationWindowStyle: CSS.Properties = {
-  maxWidth: '200px',
-  maxHeight: '300px',
+  // maxWidth: '200px',
+  // maxHeight: '300px',
 }
 
 export function CollaborationsParagraph(props: any) {
@@ -49,8 +42,13 @@ export function CollaborationsParagraph(props: any) {
   } = props;
 
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [username, setUsername] = useState('');
   const [collaborationComment, setCollaborationComment] = useState('');
   const [collaborationsMouseover, setCollaborationsMouseover] = useState({display: 'none'});
+
+  const onUsernameChange = (e) => {
+    setUsername(e.target.value);
+  }
 
   const onCollaborationCommentChange = (e) => {
     setCollaborationComment(e.target.value);
@@ -61,15 +59,24 @@ export function CollaborationsParagraph(props: any) {
   const closePopover = () => setIsPopoverOpen(false);
 
   const submitNewComment = () => {
-    console.log('new comment has been made');
+    console.log('new comment is', collaborationComment);
+    console.log('username is', username);
+    console.log('para is', para);
+    let newComment = {
+      username: username,
+      children: collaborationComment,
+      timestamp: Date().toString()
+    };
+    console.log('new comment object is', newComment);
+    comments.push(newComment);
+    console.log('comments after adding new comment is', comments);
   }
 
   useEffect(() => {
-    console.log('comment is', comments);
-  }, []);
+  }, [comments]);
 
   const iconStyle: CSS.Properties = {
-    marginTop: '45px',
+    marginTop: '30px',
     minWidth: '25px',
     // display: ''
   };
@@ -79,8 +86,8 @@ export function CollaborationsParagraph(props: any) {
       onMouseEnter={e => {setCollaborationsMouseover({display: 'block'})}}
       onMouseLeave={e => {setCollaborationsMouseover({display: 'none'})}}
     >
-      <EuiButton 
-        iconType="plusInCircle"
+      <EuiButtonEmpty
+        iconType="annotation"
         style={iconStyle}
         size="s"
         onClick={onButtonClick}
@@ -102,6 +109,15 @@ export function CollaborationsParagraph(props: any) {
               comments={comments}
             />
             <EuiSpacer/>
+            <EuiFlexGroup>
+              <EuiFlexItem>
+                <EuiFieldText
+                  placeholder='Enter username'
+                  value={username}
+                  onChange={(e) => onUsernameChange(e)}
+                />
+              </EuiFlexItem>
+            </EuiFlexGroup>
             <EuiFlexGroup>
               <EuiFlexItem>
                 <EuiFieldText

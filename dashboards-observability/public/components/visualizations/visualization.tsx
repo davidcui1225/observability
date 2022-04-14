@@ -7,10 +7,11 @@ import React from 'react';
 import { isArray } from 'lodash';
 import { VisualizationChart } from './visualization_chart';
 import { EmptyPlaceholder } from '../../components/explorer/visualizations/shared_components/empty_placeholder';
+import { onClickAnnotations } from './annotations';
 
 interface IVisualizationProps {}
 
-export const Visualization = ({ visualizations }: IVisualizationProps) => {
+export const Visualization = ({ visualizations }: IVisualizationProps, { handleAnnotations }: any) => {
   const { data, vis } = visualizations;
   const { metadata = {} } = visualizations?.data?.rawVizData;
   const { fields = [] } = metadata;
@@ -24,7 +25,10 @@ export const Visualization = ({ visualizations }: IVisualizationProps) => {
   return (
     <>
       {isVizDataValid && isVizFieldValid ? (
-        <VisualizationChart visualizations={visualizations} />
+        <VisualizationChart
+         visualizations={visualizations}
+         handleAnnotations={handleAnnotations}
+        />
       ) : (
         <EmptyPlaceholder icon={visualizations?.vis?.iconType} />
       )}

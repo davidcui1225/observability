@@ -55,7 +55,7 @@ import {
 import { zeppelinParagraphParser } from './helpers/zeppelin_parser';
 import { Paragraphs } from './paragraph_components/paragraphs';
 import { doSomethingWithSelectedText } from '../../collaborations/comments';
-import { CollaborationsParagraph } from '../../collaborations/chatWindow';
+import { CollaborationsParagraph } from '../../collaborations/collaborationsParagraph';
 const panelStyles: CSS.Properties = {
   float: 'left',
   width: '100%',
@@ -71,7 +71,7 @@ const pageStyles: CSS.Properties = {
 
 // key value pairs with object id mapping to the comment data 
 const comments = new Map([
-  [ "paragraph_f8353270-778c-4f90-8907-f62a354a4a46", 
+  [ "paragraph_bc6bd5a7-3bba-4432-8c52-faf210ec57cb", 
     [{
       username: 'janed',
       timestamp: 'Jan 1, 2020',
@@ -89,7 +89,7 @@ const comments = new Map([
     }]
   ],
   [
-    "paragraph_9766ca17-3c63-4ad5-ba57-43d48340aa25",
+    "paragraph_6ede3fdd-4990-412d-88f7-67a7baae0459",
       [{
         username: 'janed',
         timestamp: 'Jan 1, 2020',

@@ -111,9 +111,6 @@ export const ParaOutput = (props: {
             <EuiText key={key} className="markdown-output-text">
               <MarkdownRender source={val} />
             </EuiText>
-            // <CollaborationsText>
-            //   <MarkdownRender source={val} />
-            // </CollaborationsText>
           );
         case 'VISUALIZATION':
           let from = moment(visInput?.timeRange?.from).format(dateFormat);
