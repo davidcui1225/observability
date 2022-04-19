@@ -71,7 +71,7 @@ const pageStyles: CSS.Properties = {
 
 // key value pairs with object id mapping to the comment data 
 const comments = new Map([
-  [ "paragraph_bc6bd5a7-3bba-4432-8c52-faf210ec57cb", 
+  [ "paragraph_85eb7d06-c92e-4760-8a3b-aa54c5ec178e", 
     [{
       username: 'janed',
       timestamp: 'Jan 1, 2020',
@@ -86,7 +86,8 @@ const comments = new Map([
       username: 'davidcui',
       timestamp: 'Feb 27, 2022',
       children: "test comment #3"
-    }]
+    }
+  ]
   ],
   [
     "paragraph_6ede3fdd-4990-412d-88f7-67a7baae0459",

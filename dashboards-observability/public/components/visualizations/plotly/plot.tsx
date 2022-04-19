@@ -12,6 +12,7 @@ interface PltProps {
   data: Plotly.Data[];
   layout?: Partial<Plotly.Layout>;
   config?: Partial<Plotly.Config>;
+  handleAnnotations?: any;
   onHoverHandler?: (event: Readonly<Plotly.PlotMouseEvent>) => void;
   onUnhoverHandler?: (event: Readonly<Plotly.PlotMouseEvent>) => void;
   onClickHandler?: (event: Readonly<Plotly.PlotMouseEvent>) => void;

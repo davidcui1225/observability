@@ -19,17 +19,11 @@ interface IWorkSpacePanel {
   handleAnnotations: any;
 }
 
-export function WorkspacePanel({ visualizations }: IWorkSpacePanel, { handleAnnotations }: IWorkSpacePanel) {
+export function WorkspacePanel({ visualizations }: IWorkSpacePanel, { handleAnnotations }: any) {
   const [isTableViewOn, setIsTableViewOn] = useState(false);
   const VisualizationPanel = useMemo(() => {
-<<<<<<< HEAD:dashboards-observability/public/components/explorer/visualizations/workspace_panel/workspace_panel.tsx
-    return <Visualization visualizations={visualizations} handleAnnotations={handleAnnotations} />;
-=======
-    return <Visualization visualizations={visualizations} data-test-subj="workspace__visualizations"  />;
->>>>>>> upstream/main:dashboards-observability/public/components/event_analytics/explorer/visualizations/workspace_panel/workspace_panel.tsx
+    return <Visualization visualizations={visualizations} handleAnnotations={handleAnnotations} data-test-subj="workspace__visualizations"  />;
   }, [visualizations]);
-
-  console.log('handleAnnotations is', handleAnnotations);
 
   return (
     <>

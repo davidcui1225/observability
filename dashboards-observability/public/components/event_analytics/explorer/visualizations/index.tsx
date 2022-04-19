@@ -42,7 +42,6 @@ export const ExplorerVisualizations = ({
   handleOverrideTimestamp,
   handleAnnotations,
 }: IExplorerVisualizationsProps) => {
-  console.log('handleAnnotations in index.tsx is', handleAnnotations);
   return (
     <EuiResizableContainer>
       {(EuiResizablePanel, EuiResizableButton) => (

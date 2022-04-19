@@ -748,6 +748,7 @@ export const Explorer = ({
     return getVizContainerProps({
       vizId: curVisId,
       rawVizData: explorerVisualizations,
+      handlers: onClickAnnotations,
       query,
       indexFields: explorerFields,
       userConfigs: userVizConfigs[curVisId] || {},

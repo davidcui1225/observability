@@ -6,9 +6,9 @@
 
 export const onClickAnnotations = () => {
   console.log('calling onClickAnnotations');
-  var plot = document.getElementById('.js-plotly-plot');
-
-  plot.on('plotly_click', function(data) {
-    console.log('test onclick annotation');
-  });
+  var plot = document.getElementById('.plot-container'); // .plot-container .js-plotly-plot
+  console.log('plot is', plot);
+  // plot.on('plotly_click', function(data) {
+  //   console.log('test onclick annotation');
+  // });
 }

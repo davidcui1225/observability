@@ -6,11 +6,13 @@
 import { isEmpty, take } from 'lodash';
 import { getVisType } from '../vis_types';
 import { IVisualizationContainerProps, IField, IQuery } from '../../../../../common/types/explorer';
+import { onClickAnnotations } from '../../annotations';
 
 interface IVizContainerProps {
   vizId: string;
   appData?: { fromApp: boolean };
   rawVizData?: any;
+  handlers?: any;
   query?: IQuery;
   indexFields?: IField[];
   userConfigs?: any;
@@ -35,9 +37,11 @@ export const getVizContainerProps = ({
   indexFields = {},
   userConfigs = {},
   appData = {},
+  handlers = {},
 }: IVizContainerProps): IVisualizationContainerProps => {
   return {
     data: {
+      handlers: handlers,
       appData: { ...appData },
       rawVizData: { ...rawVizData },
       query: { ...query },

@@ -6,13 +6,14 @@
 import React, { useMemo } from 'react';
 import { take, isEmpty, last } from 'lodash';
 import { Plt } from '../../plotly/plot';
+import { onClickAnnotations } from '../../annotations';
 
-export const Line = ({ visualizations, layout, config }: any) => {
+export const Line = ({ visualizations, layout, config, handleAnnotations }: any) => {
   const {
     data = {},
     metadata: { fields },
   } = visualizations.data.rawVizData;
-  const { defaultAxes } = visualizations.data;
+  const { defaultAxes, handlers } = visualizations.data;
   const { dataConfig = {}, layoutConfig = {} } = visualizations?.data?.userConfigs;
   const xaxis =
     dataConfig?.valueOptions && dataConfig.valueOptions.xaxis ? dataConfig.valueOptions.xaxis : [];
@@ -88,6 +89,7 @@ export const Line = ({ visualizations, layout, config }: any) => {
     ...config,
     ...(layoutConfig.config && layoutConfig.config),
   };
+  
 
-  return <Plt data={lineValues} layout={calculatedLayout} config={mergedConfigs} />;
+  return <Plt data={lineValues} layout={calculatedLayout} config={mergedConfigs} onClickHandler={handlers} />;
 };
