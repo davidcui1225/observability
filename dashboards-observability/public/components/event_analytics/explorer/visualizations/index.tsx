@@ -26,7 +26,11 @@ interface IExplorerVisualizationsProps {
   handleRemoveField: (field: IField) => void;
   visualizations: IVisualizationContainerProps;
   handleOverrideTimestamp: (field: IField) => void;
+<<<<<<< HEAD
   handleAnnotations: any;
+=======
+  callback?: any;
+>>>>>>> upstream/main
 }
 
 export const ExplorerVisualizations = ({
@@ -41,6 +45,7 @@ export const ExplorerVisualizations = ({
   visualizations,
   handleOverrideTimestamp,
   handleAnnotations,
+  callback,
 }: IExplorerVisualizationsProps) => {
   return (
     <EuiResizableContainer>
@@ -76,6 +81,7 @@ export const ExplorerVisualizations = ({
               visualizations={visualizations}
               curVisId={curVisId}
               setCurVisId={setCurVisId}
+              callback={callback}
             />
           </EuiResizablePanel>
         </>

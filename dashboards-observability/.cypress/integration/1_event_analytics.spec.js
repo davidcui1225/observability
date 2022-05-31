@@ -35,13 +35,13 @@ describe('Has working breadcrumbs', () => {
   it('Redirect to correct page on breadcrumb click', () => {
     landOnEventExplorer();
     cy.wait(delay * 3);
-    cy.get('.euiBreadcrumb').contains('Explorer').click();
+    cy.get('.euiBreadcrumb[href="#/event_analytics/explorer"]').contains('Explorer').click();
     cy.wait(delay);
     cy.get('[data-test-subj="searchAutocompleteTextArea"]').should('exist');
-    cy.get('.euiBreadcrumb').contains('Event analytics').click();
+    cy.get('.euiBreadcrumb[href="#/event_analytics"]').contains('Event analytics').click();
     cy.wait(delay);
     cy.get('.euiTitle').contains('Event analytics').should('exist');
-    cy.get('.euiBreadcrumb').contains('Observability').click();
+    cy.get('.euiBreadcrumb[href="observability-dashboards#/"]').contains('Observability').click();
     cy.wait(delay);
     cy.get('.euiTitle').contains('Event analytics').should('exist');
   });
@@ -394,7 +394,7 @@ describe('Switch on and off livetail', () => {
     cy.get('[data-test-subj="searchAutocompleteTextArea"]').type(TEST_QUERIES[1].query);
 
     cy.get('[data-test-subj=eventLiveTail]').click();
-    cy.get('[data-test-subj=eventLiveTail__delay10]').click();
+    cy.get('[data-test-subj=eventLiveTail__delay10s]').click();
     cy.wait(delay * 2);
     cy.get('.euiToastHeader__title').contains('On').should('exist');
 
@@ -412,7 +412,7 @@ describe('Live tail stop automatically', () => {
     cy.get('[data-test-subj="searchAutocompleteTextArea"]').type(TEST_QUERIES[1].query);
 
     cy.get('[data-test-subj=eventLiveTail]').click();
-    cy.get('[data-test-subj=eventLiveTail__delay10]').click();
+    cy.get('[data-test-subj=eventLiveTail__delay10s]').click();
     cy.wait(delay * 2);
     cy.get('.euiToastHeader__title').contains('On').should('exist');
   });

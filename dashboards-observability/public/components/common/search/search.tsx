@@ -25,6 +25,7 @@ import { SavePanel } from '../../event_analytics/explorer/save_panel';
 import { PPLReferenceFlyout } from '../helpers';
 import { uiSettingsService } from '../../../../common/utils';
 import { APP_ANALYTICS_TAB_ID_REGEX } from '../../../../common/constants/explorer';
+import { LiveTailButton, StopLiveButton } from '../live_tail/live_tail_button';
 export interface IQueryBarProps {
   query: string;
   tempQuery: string;
@@ -41,6 +42,7 @@ export interface IDatePickerProps {
   setTimeRange: () => void;
   setIsOutputStale: () => void;
   handleTimePickerChange: (timeRange: string[]) => any;
+  handleTimeRangePickerRefresh: () => any;
 }
 
 export const Search = (props: any) => {
@@ -78,6 +80,8 @@ export const Search = (props: any) => {
     tabId = '',
     baseQuery = '',
     stopLive,
+    setIsLiveTailPopoverOpen,
+    liveTailName,
   } = props;
 
   const appLogEvents = tabId.match(APP_ANALYTICS_TAB_ID_REGEX);
@@ -111,6 +115,16 @@ export const Search = (props: any) => {
     >
       Save
     </EuiButton>
+  );
+
+  const liveButton = (
+    <LiveTailButton
+      isLiveTailOn={isLiveTailOn}
+      setIsLiveTailPopoverOpen={setIsLiveTailPopoverOpen}
+      liveTailName={liveTailName}
+      isLiveTailPopoverOpen={isLiveTailPopoverOpen}
+      dataTestSubj="eventLiveTail"
+    />
   );
 
   return (
@@ -165,11 +179,11 @@ export const Search = (props: any) => {
             />
           )}
         </EuiFlexItem>
-        {!showSavePanelOptionsList && (
+        {showSaveButton && !showSavePanelOptionsList && (
           <EuiFlexItem className="euiFlexItem--flexGrowZero live-tail">
             <EuiPopover
               panelPaddingSize="none"
-              button={liveTailButton}
+              button={liveButton}
               isOpen={isLiveTailPopoverOpen}
               closePopover={closeLiveTailPopover}
             >
@@ -179,14 +193,7 @@ export const Search = (props: any) => {
         )}
         {isLiveTailOn && (
           <EuiFlexItem grow={false}>
-            <EuiButton
-              iconType="stop"
-              onClick={() => stopLive()}
-              color="danger"
-              data-test-subj="eventLiveTail__off"
-            >
-            Stop
-            </EuiButton>
+            <StopLiveButton StopLive={stopLive} dataTestSubj="eventLiveTail__off" />
           </EuiFlexItem>
         )}
         {showSaveButton && searchBarConfigs[selectedSubTabId]?.showSaveButton && (
